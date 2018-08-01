@@ -47,12 +47,14 @@ with open('friendsW.txt', 'w+', encoding='utf-8') as file:
 print('start writing to file...')
 
 print('friends amount: ' + str(len(mutualFriendsForAdding)))
+
 with open('friendsW.txt', 'a', encoding='utf-8') as file:
 	file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '\n')
-	for key in mutualFriendsForAdding :
-		randd = random.randint(3, 88)
-		print('random digit: ' + str(randd))
-		time.sleep(60 * randd)
+	
+	friendsCnt = random.randint(4, 9)
+	i = 0
+	
+	for key in mutualFriendsForAdding : 
 		try :
 			vk.friends.add(user_id=key)
 		except vk_api.exceptions.ApiError :	
@@ -62,6 +64,13 @@ with open('friendsW.txt', 'a', encoding='utf-8') as file:
 		#print('\t request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 		#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 		file.write('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		time.sleep(random.randint(33, 59))
+		i += 1
+		if i >= friendsCnt :
+			friendsCnt = random.randint(4, 9)
+			i = 0
+			time.sleep(60 * random.randint(33, 88))
+		
 print('end writing to file')	
 		
 input('Please enter to exit...')
