@@ -18,7 +18,7 @@ mutualFriendsForAdding = {}
 
 me = vk.users.get()[0].get('id')
 
-MUTUAL_FRIENDS_LIMIT = 5
+MUTUAL_FRIENDS_LIMIT = int(input('Enter mutual friends amount: '))
 
 print('start processing...')
 for friend in friends :
@@ -48,13 +48,18 @@ print('friends amount: ' + str(len(mutualFriendsForAdding)))
 with open('friendsW.txt', 'a', encoding='utf-8') as file:
 	file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '\n')
 	for key in mutualFriendsForAdding :
-		#time.sleep(60 * random.randint(1, 6))
+		time.sleep(60 * random.randint(8, 87))
 		#time.sleep(random.randint(1, 15))
-		#print(datetime.datetime.now())
-		#vk.friends.add(user_id=key)
+		print(datetime.datetime.now())
+		##danger try :
+			##danger vk.friends.add(user_id=key)
+		##danger except vk_api.exceptions.ApiError :	
+			##danger print('exception. User with id: ' + str(key))
+			##danger continue
 		addFriend = vk.users.get(user_id=key)
 		#print('\t request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
-		file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		file.write('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 print('end writing to file')	
 		
 input('Please enter to exit...')
