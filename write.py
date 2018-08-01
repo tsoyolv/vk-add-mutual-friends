@@ -1,8 +1,12 @@
 import vk_api
 import time
 import random
+import datetime
 
-vk_session = vk_api.VkApi('+71111111111', 'password')
+login = input('Enter login: ')
+password = input('Enter password: ')
+
+vk_session = vk_api.VkApi(login, password)
 vk_session.auth()
 
 vk = vk_session.get_api()
@@ -14,33 +18,43 @@ mutualFriendsForAdding = {}
 
 me = vk.users.get()[0].get('id')
 
+MUTUAL_FRIENDS_LIMIT = 5
+
+print('start processing...')
 for friend in friends :
 	try :
 		mutualFriends = vk.friends.get(user_id=friend).get('items')
 	except vk_api.exceptions.ApiError :
-		print('exception. Maybe deleted user')
+		print('exception. Maybe deleted user with id: ' + str(friend))
 		continue
-	print('My Friend is: ' + str(vk.users.get(user_id=friend)) + '\n')
+	#print('My Friend is: ' + str(vk.users.get(user_id=friend)) + '\n')
 	for mFriend in mutualFriends : 
 		if mFriend not in friends and mFriend != me:
 			if dictMutualFriends.get(mFriend) :
 				dictMutualFriends[mFriend] += 1
 			else :
 				dictMutualFriends[mFriend] = 1
-			if dictMutualFriends[mFriend] >= 5 : 
+			if dictMutualFriends[mFriend] >= MUTUAL_FRIENDS_LIMIT : 
 				mutualFriendsForAdding[mFriend] = dictMutualFriends[mFriend]
-			print('\t POSSIBLE FRIEND count=' + str(dictMutualFriends[mFriend]) + '\n')
-	
-with open('friendsW.txt', 'w+') as file:
+
+print('end processing')
+
+with open('friendsW.txt', 'w+', encoding='utf-8') as file:
 	print('file created')
 
-with open('friendsW.txt', 'a') as file:
+print('start writing to file...')
+
+print('friends amount: ' + str(len(mutualFriendsForAdding)))
+with open('friendsW.txt', 'a', encoding='utf-8') as file:
+	file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '\n')
 	for key in mutualFriendsForAdding :
-		#time.sleep(60 * random.randint(33, 92))
+		#time.sleep(60 * random.randint(1, 6))
+		#time.sleep(random.randint(1, 15))
+		#print(datetime.datetime.now())
 		#vk.friends.add(user_id=key)
 		addFriend = vk.users.get(user_id=key)
-		print('\t request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		#print('\t request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 		file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+print('end writing to file')	
 		
-		
-input('Please enter to exit.')
+input('Please enter to exit...')

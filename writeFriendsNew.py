@@ -5,7 +5,10 @@ def log(file, str) :
 	file.write(str + '\n')
 	return
 
-vk_session = vk_api.VkApi('+71111111111', 'password')
+login = input('Enter login: ')
+password = input('Enter password: ')
+
+vk_session = vk_api.VkApi(login, password)
 vk_session.auth()
 
 vk = vk_session.get_api()

@@ -2,7 +2,10 @@ import vk_api
 import time
 import random
 
-vk_session = vk_api.VkApi('+79111111111', 'password')
+login = input('Enter login: ')
+password = input('Enter password: ')
+
+vk_session = vk_api.VkApi(login, password)
 vk_session.auth()
 
 vk = vk_session.get_api()
