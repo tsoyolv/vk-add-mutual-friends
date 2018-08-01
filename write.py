@@ -51,7 +51,7 @@ print('friends amount: ' + str(len(mutualFriendsForAdding)))
 with open('friendsW.txt', 'a', encoding='utf-8') as file:
 	file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '\n')
 	
-	friendsCnt = random.randint(4, 9)
+	friendsCnt = random.randint(3, 5)
 	i = 0
 	
 	for key in mutualFriendsForAdding : 
@@ -67,10 +67,10 @@ with open('friendsW.txt', 'a', encoding='utf-8') as file:
 		time.sleep(random.randint(33, 59))
 		i += 1
 		if i >= friendsCnt :
-			friendsCnt = random.randint(4, 9)
+			friendsCnt = random.randint(3, 5)
 			i = 0
 			randd = random.randint(33, 88)
-			print('wait ' + randd + ' minutes...')
+			print('wait ' + str(randd) + ' minutes...')
 			time.sleep(60 * randd)
 		
 print('end writing to file')	
