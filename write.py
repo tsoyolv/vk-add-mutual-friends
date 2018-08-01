@@ -61,7 +61,7 @@ with open('friendsW.txt', 'a', encoding='utf-8') as file:
 			print('exception. User with id: ' + str(key))
 			continue
 		addFriend = vk.users.get(user_id=key)
-		#print('\t request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		print('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
 		#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 		file.write('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 		time.sleep(random.randint(33, 59))
@@ -69,7 +69,9 @@ with open('friendsW.txt', 'a', encoding='utf-8') as file:
 		if i >= friendsCnt :
 			friendsCnt = random.randint(4, 9)
 			i = 0
-			time.sleep(60 * random.randint(33, 88))
+			randd = random.randint(33, 88)
+			print('wait ' + randd + ' minutes...')
+			time.sleep(60 * randd)
 		
 print('end writing to file')	
 		
