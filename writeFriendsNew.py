@@ -5,23 +5,49 @@ def log(file, str) :
 	file.write(str + '\n')
 	return
 
-vk_session = vk_api.VkApi('+791111111111', 'password')
+vk_session = vk_api.VkApi('+71111111111', 'password')
 vk_session.auth()
 
 vk = vk_session.get_api()
 
+writeLimit = 1000
 
 friends = vk.friends.get().get('items')
 
-print('start loop')
-friendsFile = open('friends.txt', 'w+')
-for friend in friends :
-	mutualFriends = vk.friends.get(user_id=friend).get('items')
-	for mFriend in mutualFriends : 
-		if mFriend not in friends and mFriend != vk.users.get()[0].get('id'):
-			print(str({mFriend:1}) + '\n')
-			friendsFile.write(str({mFriend:1}) + '\n')
+me = vk.users.get()[0].get('id')
 
-friendsFile.close()			
+print('start loop')
+
+writeCnt = 0
+
+with open('friends.txt', 'w+') as file:
+	print('file created')
+
+allMFriendsCount = 0
+for friend in friends :
+	friendObj = vk.users.get(user_id=friend)
+	try :
+		mutualFriends = vk.friends.get(user_id=friend).get('items')
+	except vk_api.exceptions.ApiError :
+		print('exception. Maybe deleted user')
+		continue
+	j = 0;
+	print('friend: ' + str(friendObj))
+	while j < len(mutualFriends) :
+		with open('friends.txt', 'a') as file:  #with open('friends.txt', 'w') as file:
+			while writeCnt < writeLimit and j < len(mutualFriends) :
+				mFriend = mutualFriends[j]
+				if mFriend not in friends and mFriend != me:
+					#print('\t' + str({mFriend:1}) + '\n')
+					file.write(str({mFriend:1}) + '\n')
+					writeCnt += 1
+				j += 1
+				allMFriendsCount += 1
+			if writeCnt == writeLimit :
+				writeCnt = 0
+				print('writeCnt')
+	
+		
+print('All possible friends count: ' + str(allMFriendsCount))
 print('END!!!!!!!')				
 input('Please enter to exit.')
