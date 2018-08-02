@@ -40,11 +40,12 @@ def createLogFiles() :
 	return {FRIENDS_WILL_BE_CONST:friendsWillBeAddedstr, FRIENDS_WERE_ADDED_CONST: friendsWereAddedstr}
 
 def filterFriends(friends, vk, sex) :
-	for key in list(friends) :
+	friendsTemp = friends.copy()
+	for key in list(friendsTemp) :
 		addFriend = vk.users.get(user_id=key,fields='sex')
 		if addFriend[0].get('sex') != sex :  # gender. 1 = female, 2 = male
-			del friends[key]
-	return friends
+			del friendsTemp[key]
+	return friendsTemp
 	
 def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	MUTUAL_FRIENDS_LIMIT = mutualFriendsCnt
@@ -61,7 +62,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 		try :
 			mutualFriends = vk.friends.get(user_id=friend).get('items')
 		except vk_api.exceptions.ApiError :
-			print('exception. Maybe deleted user with id: ' + str(friend))
+			print('\texception. Maybe deleted user with id: ' + str(friend))
 			continue
 		#print('My Friend is: ' + str(vk.users.get(user_id=friend)) + '\n')
 		for mFriend in mutualFriends : 
@@ -75,7 +76,11 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 
 	print('end processing')
 	
-	mutualFriendsForAdding = filterFriends(mutualFriendsForAdding, vk, 1)
+	mutualFriendsForAddingTemp = filterFriends(mutualFriendsForAdding, vk, 1)
+	if len(mutualFriendsForAddingTemp) == 0 :
+		mutualFriendsForAddingTemp = mutualFriendsForAdding
+		print('switch to ANY GENDER!')
+	mutualFriendsForAdding = mutualFriendsForAddingTemp
 	
 	print('friends amount: ' + str(len(mutualFriendsForAdding)))
 	
@@ -86,7 +91,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 		file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '. mutual friends limit = ' + str(MUTUAL_FRIENDS_LIMIT) + '\n')
 		for key in mutualFriendsForAdding :
 			addFriend = vk.users.get(user_id=key)
-			file.write('FRIEND. cnt = ' + str(mutualFriendsForAdding[key]) + ' . Info: ' + str(addFriend) + '\n')
+			file.write('FRIEND. cnt = ' + str(mutualFriendsForAdding[key]) + '. Info: ' + str(addFriend) + '\n')
 	print('end writing to file FriendsThatWillBeAdded')
 
 	print('start writing to file FriendsThatWereAdded...')
@@ -104,7 +109,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 			print('exception or connection refused. User with id: ' + str(key))
 			vk = loginAndGetApi(login, password)
 			continue
-		print('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
+		print('\trequest sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
 		with open(logFilesPaths.get(FRIENDS_WERE_ADDED_CONST), 'a', encoding='utf-8') as file:	
 			#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
 			file.write('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
