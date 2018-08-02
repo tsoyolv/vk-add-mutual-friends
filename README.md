@@ -1,6 +1,6 @@
 # vk-add-mutual-friends - Console App that adds all mutual friends in VK who have common friends amount >= n
 
-That console app adds mutual friends who have common friends amount >= n with random time delay and after it adds all mutual friends, it is continue to add 
+Console app that adds mutual friends who have common friends amount >= n with random time delay and after it adds all mutual friends, it is continue to add 
 mutual friends with more common friends amount (incremented by 1). It continues till the moment when there is no mutual friends.
 
 Requirements:
