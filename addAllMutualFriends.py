@@ -26,7 +26,7 @@ def createLogFiles() :
 	if not os.path.exists(addedPath):
 		os.makedirs(addedPath)
 	
-	datetimestr = datetime.datetime.now().strftime('%H-%M-%m__%d-%m-%y')
+	datetimestr = datetime.datetime.now().strftime('_%H-%M-%m__%d-%m-%y')
 	
 	friendsWillBeAddedstr = os.path.join(needPath, 'friendsWillBeAdded' + datetimestr + '.log')
 	friendsWereAddedstr = os.path.join(addedPath, 'friendsWereAdded' + datetimestr + '.log')
@@ -39,6 +39,13 @@ def createLogFiles() :
 		
 	return {FRIENDS_WILL_BE_CONST:friendsWillBeAddedstr, FRIENDS_WERE_ADDED_CONST: friendsWereAddedstr}
 
+def filterFriends(friends, vk, sex) :
+	for key in list(friends) :
+		addFriend = vk.users.get(user_id=key,fields='sex')
+		if addFriend[0].get('sex') != sex :  # gender. 1 = female, 2 = male
+			del friends[key]
+	return friends
+	
 def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	MUTUAL_FRIENDS_LIMIT = mutualFriendsCnt
 
@@ -67,6 +74,9 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 					dictMutualFriends[mFriend] = 1
 
 	print('end processing')
+	
+	mutualFriendsForAdding = filterFriends(mutualFriendsForAdding, vk, 1)
+	
 	print('friends amount: ' + str(len(mutualFriendsForAdding)))
 	
 	logFilesPaths = createLogFiles()
@@ -75,7 +85,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	with open(logFilesPaths.get(FRIENDS_WILL_BE_CONST), 'a', encoding='utf-8') as file:
 		file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '. mutual friends limit = ' + str(MUTUAL_FRIENDS_LIMIT) + '\n')
 		for key in mutualFriendsForAdding :
-			addFriend = vk.users.get(user_id=key)
+			addFriend = vk.users.get(user_id=key,fields='sex')
 			file.write('FRIEND. cnt = ' + str(mutualFriendsForAdding[key]) + ' . Info: ' + str(addFriend) + '\n')
 	print('end writing to file FriendsThatWillBeAdded')
 
@@ -87,13 +97,13 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	i = 0
 	
 	for key in mutualFriendsForAdding : 
+		addFriend = vk.users.get(user_id=key,fields='sex')
 		try :
 			vk.friends.add(user_id=key)
 		except (vk_api.exceptions.ApiError, requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :	
 			print('exception or connection refused. User with id: ' + str(key))
 			vk = loginAndGetApi(login, password)
 			continue
-		addFriend = vk.users.get(user_id=key)
 		print('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
 		with open(logFilesPaths.get(FRIENDS_WERE_ADDED_CONST), 'a', encoding='utf-8') as file:	
 			#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
