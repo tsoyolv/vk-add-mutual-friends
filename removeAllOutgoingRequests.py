@@ -11,8 +11,12 @@ vk = vk_session.get_api()
 outRequests = vk.friends.getRequests(out=1).get('items')
 
 for outRequest in outRequests :
-	#vk.friends.delete(user_id=outRequest)
-	print('delete request for user: ' + str(vk.users.get(user_id=outRequest)) + '\n')
+	try :
+		vk.friends.delete(user_id=outRequest)
+	except vk_api.exceptions.ApiError :	
+		print('exception or connection refused. User with id: ' + str(outRequest))
+		continue
+	print('delete request for user: ' + str(vk.users.get(user_id=outRequest)))
 
 
 input('Please enter to exit.')

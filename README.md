@@ -11,11 +11,11 @@ Requirements:
 Start
 -
 To start application locally you need to:
-1. install vk_api pip install vk_api (https://github.com/python273/vk_api)
+1. install vk_api. [pip install vk_api] (https://github.com/python273/vk_api)
 2. Start addAllMutualFriends.py
 3. Enter your login/password and mutual friends amount
 
 To start application that removes all outgoing requests for friends you need to:
-1. install vk_api pip install vk_api (https://github.com/python273/vk_api)
+1. install vk_api. [pip install vk_api] (https://github.com/python273/vk_api)
 2. Start removeAllOutgoingRequests.py
 3. Enter your login/password
