@@ -85,7 +85,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	with open(logFilesPaths.get(FRIENDS_WILL_BE_CONST), 'a', encoding='utf-8') as file:
 		file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '. mutual friends limit = ' + str(MUTUAL_FRIENDS_LIMIT) + '\n')
 		for key in mutualFriendsForAdding :
-			addFriend = vk.users.get(user_id=key,fields='sex')
+			addFriend = vk.users.get(user_id=key)
 			file.write('FRIEND. cnt = ' + str(mutualFriendsForAdding[key]) + ' . Info: ' + str(addFriend) + '\n')
 	print('end writing to file FriendsThatWillBeAdded')
 
@@ -97,7 +97,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	i = 0
 	
 	for key in mutualFriendsForAdding : 
-		addFriend = vk.users.get(user_id=key,fields='sex')
+		addFriend = vk.users.get(user_id=key)
 		try :
 			vk.friends.add(user_id=key)
 		except (vk_api.exceptions.ApiError, requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :	
