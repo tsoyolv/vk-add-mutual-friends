@@ -6,6 +6,11 @@ import requests
 import urllib3
 import os
 
+OUTGOING_REQUESTS_DAY_LIMIT = 40 
+outgoingRequestsCnt = 0
+currentDay = datetime.datetime.today()
+nextDay = currentDay + datetime.timedelta(days=1)
+
 def loginAndGetApi(login, password) :
 	vk_session = vk_api.VkApi(login, password)
 	vk_session.auth()
@@ -43,7 +48,7 @@ def filterFriends(friends, vk, sex) :
 	friendsTemp = friends.copy()
 	for key in list(friendsTemp) :
 		addFriend = vk.users.get(user_id=key,fields='sex')
-		if addFriend[0].get('sex') != sex :  # gender. 1 = female, 2 = male
+		if addFriend[0].get('sex') != sex or addFriend[0].get('deactivated') :  # gender. 1 = female, 2 = male
 			del friendsTemp[key]
 	return friendsTemp
 	
@@ -89,9 +94,16 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	print('start writing to file FriendsThatWillBeAdded...')
 	with open(logFilesPaths.get(FRIENDS_WILL_BE_CONST), 'a', encoding='utf-8') as file:
 		file.write('friends amount: ' + str(len(mutualFriendsForAdding)) + '. mutual friends limit = ' + str(MUTUAL_FRIENDS_LIMIT) + '\n')
-		for key in mutualFriendsForAdding :
-			addFriend = vk.users.get(user_id=key)
-			file.write('FRIEND. cnt = ' + str(mutualFriendsForAdding[key]) + '. Info: ' + str(addFriend) + '\n')
+		for key in mutualFriendsForAdding :	
+			try :
+				addFriend = vk.users.get(user_id=key)
+				file.write('FRIEND. cnt = ' + str(mutualFriendsForAdding[key]) + '. Info: ' + str(addFriend) + '\n')
+			except (requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :	
+				waitReconnect = random.randint(3, 5)
+				print('Connection refused! User with id: ' + str(key) + '. wait ' + str(waitReconnect) + ' minutes')
+				time.sleep(60 * waitReconnect)
+				vk = loginAndGetApi(login, password)
+				continue
 	print('end writing to file FriendsThatWillBeAdded')
 
 	print('start writing to file FriendsThatWereAdded...')
@@ -100,19 +112,38 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 		
 	friendsCnt = random.randint(3, 5)
 	i = 0
-	
+	global outgoingRequestsCnt 
+	global currentDay
+	global nextDay
+	global OUTGOING_REQUESTS_DAY_LIMIT 
 	for key in mutualFriendsForAdding : 
-		addFriend = vk.users.get(user_id=key)
 		try :
+			addFriend = vk.users.get(user_id=key)
 			vk.friends.add(user_id=key)
-		except (vk_api.exceptions.ApiError, requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :	
-			print('exception or connection refused. User with id: ' + str(key))
-			vk = loginAndGetApi(login, password)
+			outgoingRequestsCnt += 1
+			if outgoingRequestsCnt == 1 :
+				nextDay = datetime.datetime.today() + datetime.timedelta(days=1)
+				print('Limit: ' + str(OUTGOING_REQUESTS_DAY_LIMIT) + ' for day till: ' + str(nextDay))
+			if outgoingRequestsCnt >= OUTGOING_REQUESTS_DAY_LIMIT :
+				currentDay = datetime.datetime.today()
+				if currentDay < nextDay : 
+					temp = (nextDay - currentDay).seconds
+					print('\toutgoingRequests limit! wait for ' + str((temp + 100) / 60) + ' minutes. Till' + str(nextDay))
+					time.wait(temp + 100)
+				outgoingRequestsCnt = 0
+			print('\trequest sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
+			with open(logFilesPaths.get(FRIENDS_WERE_ADDED_CONST), 'a', encoding='utf-8') as file:	
+				#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+				file.write('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		except vk_api.exceptions.ApiError :
+			print('exception with user. User with id: ' + str(key))
 			continue
-		print('\trequest sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
-		with open(logFilesPaths.get(FRIENDS_WERE_ADDED_CONST), 'a', encoding='utf-8') as file:	
-			#file.write('request sent. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
-			file.write('request sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend) + '\n')
+		except (requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :	
+			waitReconnect = random.randint(3, 5)
+			print('\tConnection refused! User with id: ' + str(key) + '. wait ' + str(waitReconnect) + ' minutes')
+			time.sleep(60 * waitReconnect)
+			vk = loginAndGetApi(login, password)
+			continue		
 		time.sleep(random.randint(33, 59))
 		i += 1
 		if i >= friendsCnt :
@@ -131,19 +162,29 @@ password = input('Enter password: ')
 mutualFriendsCnt = int(input('Enter mutual friends amount: '))
 vk = loginAndGetApi(login, password)
 
-resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
+try : 
+	resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
+except (requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :
+	print('Connection refused! rerun adding with mutualFriendsCnt: ' + str(mutualFriendsCnt))
+	vk = loginAndGetApi(login, password)
+	resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
 
 while resultedCnt > 0 :
-	randd = random.randint(4, 8)
+	if resultedCnt <= 8 :
+		randd = 1
+	elif resultedCnt < 20 :
+		randd = resultedCnt % 8
+	else :
+		randd = random.randint(4, 8)
 	print('wait for ' + str(randd) + ' hours!...')
 	time.sleep(60 * 60 * randd)
+	mutualFriendsCnt += 1
+	print('mutual friends limit = ' + str(mutualFriendsCnt))
 	try : 
 		resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
-	except (vk_api.exceptions.ApiError, requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :
-		print('there is exception or connection refused! rerun adding with mutualFriendsCnt: ' + str(mutualFriendsCnt))
+	except (requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :
+		print('Connection refused! rerun adding with mutualFriendsCnt: ' + str(mutualFriendsCnt))
 		vk = loginAndGetApi(login, password)
 		resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
-	print('mutual friends limit = ' + str(mutualFriendsCnt + 1))
-	mutualFriendsCnt += 1
 		
 input('Please enter to exit...')
