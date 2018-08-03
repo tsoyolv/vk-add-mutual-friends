@@ -128,8 +128,8 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 				currentDay = datetime.datetime.today()
 				if currentDay < nextDay : 
 					temp = (nextDay - currentDay).seconds
-					print('\toutgoingRequests limit! wait for ' + str((temp + 100) / 60) + ' minutes. Till' + str(nextDay))
-					time.wait(temp + 100)
+					print('\tOutgoingRequests limit! wait for ' + str((temp + 100) / 60) + ' minutes. Till' + str(nextDay))
+					time.sleep(temp + 100)
 				outgoingRequestsCnt = 0
 			print('\trequest sent. at time: ' + str(datetime.datetime.now()) + '. cnt = ' + str(mutualFriendsForAdding[key]) + ' friend: ' + str(addFriend))
 			with open(logFilesPaths.get(FRIENDS_WERE_ADDED_CONST), 'a', encoding='utf-8') as file:	
