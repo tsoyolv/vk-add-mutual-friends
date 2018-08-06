@@ -116,7 +116,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	for key in mutualFriendsForAdding : 
 		try :
 			friend = mutualFriendsForAdding[key]
-			#vk.friends.add(user_id=key)
+			vk.friends.add(user_id=key)
 			outgoingRequestsCnt += 1
 			if outgoingRequestsCnt == 1 :
 				nextDay = datetime.today() + timedelta(days=1)
