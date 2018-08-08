@@ -7,6 +7,7 @@ import time
 import random
 import requests
 import urllib3
+import getpass
 
 def LOG_PATH():
 	return 'logs'
@@ -153,7 +154,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 
 def main() : 
 	login = input('Enter login: ')
-	password = input('Enter password: ')
+	password = getpass.getpass('Enter password: ')
 	mutualFriendsCnt = int(input('Enter mutual friends amount: '))
 	vk = loginAndGetApi(login, password)
 	
