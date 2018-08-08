@@ -166,9 +166,9 @@ def main() :
 		
 	while resultedCnt > 0 :
 		if resultedCnt <= 8 :
-			randd = random.randint(3, 41)
+			randd = random.randint(13, 16) * 60
 		elif resultedCnt < 20 :
-			randd = random.randint(1, 3) * 60
+			randd = random.randint(9, 12) * 60
 		else :
 			randd = random.randint(4, 8) * 60
 		logger.debug('Bunch done! wait for %s minutes!...', str(randd))
