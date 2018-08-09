@@ -46,11 +46,17 @@ def loginAndGetApi(login, password) :
 	vk_session.auth()
 	return vk_session.get_api()	
 
-def filterFriends(friends, vk, sex) :
+def filterFriends(friends, vk, sex, ignoreThousand) :
 	filtered = {}
 	for key in list(friends) :
 		addFriend = vk.users.get(user_id=key,fields='sex')
-		if addFriend[0].get('sex') == sex and not addFriend[0].get('deactivated') :  # gender. 1 = female, 2 = male
+		if addFriend[0].get('deactivated') :
+			continue
+		if ignoreThousand and len(vk.friends.get(user_id=key).get('items')) >= 1000 :
+			continue
+		if sex == -1 :
+			filtered[key] = (addFriend, friends[key])
+		elif addFriend[0].get('sex') == sex :  # gender. 1 = female, 2 = male
 			filtered[key] = (addFriend, friends[key])
 	return filtered
 	
@@ -87,7 +93,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 
 	logger.debug('end processing...')
 	
-	mutualFriendsForAdding = filterFriends(mutualFriendsForAdding, vk, 1)
+	mutualFriendsForAdding = filterFriends(mutualFriendsForAdding, vk, 1, True)
 	
 	logger.debug('start writing to file FriendsThatWillBeAdded...')
 	logWillbeAdded.debug('friends amount: %s. mutual friends limit = %s', str(len(mutualFriendsForAdding)), str(MUTUAL_FRIENDS_LIMIT))
