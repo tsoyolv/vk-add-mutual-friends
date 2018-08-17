@@ -60,7 +60,7 @@ def filterFriends(friends, vk, sex, ignoreThousand) :
 			filtered[key] = (addFriend, friends[key])
 	return filtered
 	
-def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
+def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, firstTimeLimit) :
 	# new logger in every bunch
 	logWillbeAdded = createLogger('friendsWillBeAdded' + str(mutualFriendsCnt), FRINEDS_BE_ADDED_LOG_PATH(), logging.DEBUG, False)
 	logWereAdded = createLogger('friendsWereAdded'+ str(mutualFriendsCnt), FRIENDS_WERE_ADDED_LOG_PATH(), logging.INFO, True)
@@ -73,6 +73,8 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 	friends = vk.friends.get().get('items')
 	me = vk.users.get()[0].get('id')
 	outgoingRequests = vk.friends.getRequests(out=1).get('items')
+	
+	vk.messages.send(user_id=me, message='Bunch started!!! mutual friends cnt: ' + str(MUTUAL_FRIENDS_LIMIT))
 	
 	logger.debug('start processing...')
 	
@@ -133,9 +135,17 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt) :
 				if currentDay < nextDay : 
 					waitOutLimit = (nextDay - currentDay).seconds
 					logger.info('Outgoing requests limit! wait for %s minutes. Till %s', str((waitOutLimit + 100) / 60), str(nextDay))
+					vk.messages.send(user_id=me, message='Outgoing requests limit! wait ' + str((waitOutLimit + 100) / 60) + 'minutes!')
 					time.sleep(waitOutLimit + 100)
 				outgoingRequestsCnt = 0
 			logWereAdded.info('Request sent. cnt = %s. friend: %s', str(friend[1]), str(friend[0]))
+			
+			if firstTimeLimit == 0 :
+				logger.debug('Firsttime limit exceed! limit: ' + str(firstTimeLimit))	
+				break
+			elif firstTimeLimit > 0 :
+				firstTimeLimit -= 1
+			
 		except vk_api.exceptions.ApiError as expA :
 			logger.exception('exception with user. User: %s. Exception: %s', str(friend[0]), expA)
 			continue
@@ -165,11 +175,11 @@ def main() :
 	vk = loginAndGetApi(login, password)
 	
 	try : 
-		resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
+		resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, -1)
 	except (requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :
 		logger.exception("Connection refused! rerun adding with mutualFriendsCnt: %s Exception: %s", str(mutualFriendsCnt), exp)
 		vk = loginAndGetApi(login, password)
-		resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
+		resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, -1)
 		
 	while resultedCnt > 0 :
 		if resultedCnt <= 8 :
@@ -183,11 +193,11 @@ def main() :
 		mutualFriendsCnt += 1
 		logger.debug('mutual friends limit = %s', str(mutualFriendsCnt))
 		try : 
-			resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
+			resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, -1)
 		except (requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError) as exp :
 			logger.exception('Connection refused! rerun adding with mutualFriendsCnt: %s', str(mutualFriendsCnt))
 			vk = loginAndGetApi(login, password)
-			resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt)
+			resultedCnt = addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, -1)
 			
 	return
 
