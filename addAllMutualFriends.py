@@ -72,9 +72,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 
 	friends = vk.friends.get().get('items')
 	me = vk.users.get()[0].get('id')
-	outgoingRequests = vk.friends.getRequests(out=1).get('items')
-	
-	vk.messages.send(user_id=me, message='Bunch started!!! mutual friends cnt: ' + str(MUTUAL_FRIENDS_LIMIT))
+	outgoingRequests = vk.friends.getRequests(out=1, count=1000).get('items')
 	
 	logger.debug('start processing...')
 	
@@ -118,7 +116,8 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 	
 	logger.debug('start writing to file FriendsThatWereAdded...')
 	logWereAdded.info('friends amount: %s. mutual friends limit: %s. outgoing requests limit: %s', str(len(mutualFriendsForAdding)), str(MUTUAL_FRIENDS_LIMIT), str(OUTGOING_REQUESTS_DAY_LIMIT))
-		
+	vk.messages.send(user_id=me, message='Bunch started!!! mutual friends cnt: ' + str(MUTUAL_FRIENDS_LIMIT) + ' .friends amount: ' + str(len(mutualFriendsForAdding)))
+	
 	friendsBunchLimit = random.randint(3, 5)
 	i = 0
 
@@ -135,7 +134,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 				if currentDay < nextDay : 
 					waitOutLimit = (nextDay - currentDay).seconds
 					logger.info('Outgoing requests limit! wait for %s minutes. Till %s', str((waitOutLimit + 100) / 60), str(nextDay))
-					vk.messages.send(user_id=me, message='Outgoing requests limit! wait ' + str((waitOutLimit + 100) / 60) + 'minutes!')
+					vk.messages.send(user_id=me, message='Outgoing requests limit! wait ' + str((waitOutLimit + 100) / 60) + ' minutes!')
 					time.sleep(waitOutLimit + 100)
 				outgoingRequestsCnt = 0
 			logWereAdded.info('Request sent. cnt = %s. friend: %s', str(friend[1]), str(friend[0]))
