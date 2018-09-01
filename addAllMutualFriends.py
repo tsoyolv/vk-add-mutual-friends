@@ -46,13 +46,18 @@ def loginAndGetApi(login, password) :
 	vk_session.auth()
 	return vk_session.get_api()	
 
-def filterFriends(friends, vk, sex, ignoreThousand) :
+def filterFriends(logger, friends, vk, sex, ignoreThousand) :
 	filtered = {}
 	for key in list(friends) :
 		addFriend = vk.users.get(user_id=key,fields='sex')
 		if addFriend[0].get('deactivated') :
 			continue
-		if ignoreThousand and vk.users.getFollowers(user_id=key).get('count') >= 1000 :
+		try :
+		    followersCnt = vk.users.getFollowers(user_id=key).get('count')
+		except vk_api.exceptions.ApiError as exp :
+			logger.exception('Api Error for friend: %s', str(addFriend))
+			continue
+		if ignoreThousand and followersCnt >= 1000 :
 			continue
 		if sex == -1 :
 			filtered[key] = (addFriend, friends[key])
@@ -93,7 +98,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 
 	logger.debug('end processing...')
 	
-	mutualFriendsForAdding = filterFriends(mutualFriendsForAdding, vk, 1, True)
+	mutualFriendsForAdding = filterFriends(logger, mutualFriendsForAdding, vk, 1, True)
 	
 	logger.debug('start writing to file FriendsThatWillBeAdded...')
 	logWillbeAdded.debug('friends amount: %s. mutual friends limit = %s', str(len(mutualFriendsForAdding)), str(MUTUAL_FRIENDS_LIMIT))
