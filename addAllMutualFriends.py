@@ -52,7 +52,7 @@ def filterFriends(friends, vk, sex, ignoreThousand) :
 		addFriend = vk.users.get(user_id=key,fields='sex')
 		if addFriend[0].get('deactivated') :
 			continue
-		if ignoreThousand and len(vk.friends.get(user_id=key).get('items')) >= 1000 :
+		if ignoreThousand and vk.users.getFollowers(user_id=key).get('count') >= 1000 :
 			continue
 		if sex == -1 :
 			filtered[key] = (addFriend, friends[key])
