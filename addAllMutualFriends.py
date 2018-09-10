@@ -60,7 +60,7 @@ def addUserToBlackListFile(blackListUser) :
 		file.write(blackListUser.replace('u\'', '\'').replace('\'', '\"') + '\n')
 	return
 
-def filterFriends(logger, friends, vk, sex, ignoreThousand) :
+def filterFriends(logger, friends, vk, sex, ignoreFollowersCount, ignoredFriendsCount, firstTimeLimitCnt) :
 	filtered = {}
 	for key in list(friends) :
 		addFriend = vk.users.get(user_id=key,fields='sex')
@@ -68,15 +68,18 @@ def filterFriends(logger, friends, vk, sex, ignoreThousand) :
 			continue
 		try :
 		    followersCnt = vk.users.getFollowers(user_id=key).get('count')
+		    friendsCnt = vk.friends.get(user_id=key).get('count')
 		except vk_api.exceptions.ApiError as exp :
 			logger.exception('Api Error for friend: %s', str(addFriend))
 			continue
-		if ignoreThousand and followersCnt >= 1000 :
+		if followersCnt >= ignoreFollowersCount or friendsCnt >= ignoredFriendsCount :
 			continue
 		if sex == -1 :
 			filtered[key] = (addFriend, friends[key])
 		elif addFriend[0].get('sex') == sex :  # gender. 1 = female, 2 = male
 			filtered[key] = (addFriend, friends[key])
+		if len(filtered) >= firstTimeLimitCnt :
+			return filtered
 	return filtered
 	
 def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, firstTimeLimit) :
@@ -112,7 +115,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 
 	logger.debug('end processing...')
 	
-	mutualFriendsForAdding = filterFriends(logger, mutualFriendsForAdding, vk, 1, True)
+	mutualFriendsForAdding = filterFriends(logger, mutualFriendsForAdding, vk, 1, 1000, 2000, firstTimeLimit)
 	
 	logger.debug('start writing to file FriendsThatWillBeAdded...')
 	logWillbeAdded.debug('friends amount: %s. mutual friends limit = %s', str(len(mutualFriendsForAdding)), str(MUTUAL_FRIENDS_LIMIT))
