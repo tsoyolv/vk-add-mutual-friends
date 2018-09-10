@@ -8,6 +8,7 @@ import random
 import requests
 import urllib3
 import getpass
+import json
 
 def LOG_PATH():
 	return 'logs'
@@ -45,6 +46,19 @@ def loginAndGetApi(login, password) :
 	vk_session = vk_api.VkApi(login, password)
 	vk_session.auth()
 	return vk_session.get_api()	
+
+def getBlackListFromFile() : 
+	blacklist = []
+	with open('blacklist.txt', 'r', encoding='utf-8') as file:
+		for line in file:
+			blacklist.append(json.loads(line.replace('u\'', '\'').replace('\'', '\"')))
+	print(blacklist)	
+	return
+	
+def addUserToBlackListFile(blackListUser) :
+	with open('blacklist.txt', 'a', encoding='utf-8') as file:
+		file.write(blackListUser.replace('u\'', '\'').replace('\'', '\"') + '\n')
+	return
 
 def filterFriends(logger, friends, vk, sex, ignoreThousand) :
 	filtered = {}
