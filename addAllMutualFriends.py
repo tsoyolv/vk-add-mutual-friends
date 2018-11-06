@@ -26,6 +26,14 @@ def createLogFiles() :
 		os.makedirs(FRIENDS_WERE_ADDED_LOG_PATH())
 	return
 
+def getDeletedOutRequestsIdsFromFile() : 
+	blacklist = []
+	with open('deletedOutRequestsIds.txt', 'r', encoding='utf-8') as file:
+		for line in file:
+			blacklist.append(int(line))
+	print(blacklist)	
+	return blacklist
+
 def createLogger(name, path, level, consoleLogAdded) : 
 	logger = logging.getLogger(name)
 	logger.setLevel(logging.DEBUG)
@@ -95,6 +103,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 	friends = vk.friends.get().get('items')
 	me = vk.users.get()[0].get('id')
 	outgoingRequests = vk.friends.getRequests(out=1, count=1000).get('items')
+	deletedRequests = getDeletedOutRequestsIdsFromFile()
 	
 	logger.debug('start processing...')
 	
@@ -105,7 +114,7 @@ def addPossibleFriendsWithCommonFriends(vk, login, password, mutualFriendsCnt, f
 			logger.exception('User was deleted or banned user with id: %s', str(friend))
 			continue
 		for mFriend in mutualFriends : 
-			if (mFriend not in friends) and (mFriend not in outgoingRequests) and (mFriend != me) :
+			if (mFriend not in friends) and (mFriend not in outgoingRequests) and (mFriend not in deletedRequests) and (mFriend != me) :
 				if dictMutualFriends.get(mFriend) :
 					dictMutualFriends[mFriend] += 1
 					if dictMutualFriends[mFriend] >= MUTUAL_FRIENDS_LIMIT : 
